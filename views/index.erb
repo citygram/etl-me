@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ETL Me</title>
+</head>
+<body>
+<% @collections.each do |collection| %>
+  <p><a href="<%= collection.path %>"><%= collection.path %></a></p>
+<% end %>
+</body>
+</html>

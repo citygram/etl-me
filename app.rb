@@ -16,3 +16,8 @@ ETL.collections.each do |collection|
     ETL.generator.(collection.raw)
   end
 end
+
+get '/' do
+  @collections = ETL.collections
+  erb :index
+end
