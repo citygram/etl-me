@@ -6,18 +6,21 @@ class ETL
   @cache = ActiveSupport::Cache::MemoryStore.new(expires_in: Integer(ENV['CACHE_TTL'] || 300))
   @parser = ->(data) { JSON.parse(data) }
   @generator = ->(data){ JSON.pretty_generate(data) }
-  @registry = {}
+  @collections = []
 
   class << self
-    attr_reader :cache, :generator, :parser, :registry
+    attr_reader :cache, :generator, :parser, :collections
   end
 
   def self.register(path, *args, &block)
-    registry[path] = new(path, *args, &block)
+    collections << new(path, *args, &block)
   end
+
+  attr_reader :path, :raw_path
 
   def initialize(path, source, &transform)
     @path = path
+    @raw_path = @path+'/raw'
     @source = source
     @transform = transform
     @connection = Faraday.new(url: @source) do |conn|

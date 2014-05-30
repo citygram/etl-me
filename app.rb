@@ -5,13 +5,13 @@ require 'json'
 require 'sinatra'
 require './collections'
 
-ETL.registry.each do |path, collection|
-  get(path) do
+ETL.collections.each do |collection|
+  get(collection.path) do
     content_type :json
     collection.cooked
   end
 
-  get(path+'/raw') do
+  get(collection.raw_path) do
     content_type :json
     ETL.generator.(collection.raw)
   end
