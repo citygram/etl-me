@@ -13,6 +13,6 @@ ETL.registry.each do |path, collection|
 
   get(path+'/raw') do
     content_type :json
-    ETL.generator.call(collection.raw)
+    ETL.generator.(collection.raw)
   end
 end
