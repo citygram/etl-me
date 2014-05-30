@@ -3,44 +3,39 @@ require 'faraday'
 require 'faraday_middleware'
 
 class ETL
-  REGISTRY = {}
+  @cache = ActiveSupport::Cache::MemoryStore.new(expires_in: Integer(ENV['CACHE_TTL'] || 300))
+  @parser = ->(data) { JSON.parse(data) }
+  @generator = ->(data){ JSON.pretty_generate(data) }
+  @registry = {}
 
-  CACHE = ActiveSupport::Cache::MemoryStore.new(
-    expires_in: Integer(ENV['CACHE_TTL'] || 300)
-  )
-
-  def self.registry
-    REGISTRY
+  class << self
+    attr_reader :cache, :generator, :parser, :registry
   end
 
-  def self.register(*args, &block)
-    new(*args, &block)
+  def self.register(path, *args, &block)
+    registry[path] = new(path, *args, &block)
   end
 
   def initialize(path, source, &transform)
     @path = path
     @source = source
     @transform = transform
-    @cache = CACHE
     @connection = Faraday.new(url: @source) do |conn|
       conn.headers['Content-Type'] = 'application/json'
       conn.headers['X-App-Token'] = ENV.fetch('APP_TOKEN')
-      conn.response :json
       conn.adapter Faraday.default_adapter
     end
-
-    REGISTRY[@path] = self
   end
 
   def raw
-    @cache.fetch(@source) do
-      @connection.get.body
+    ETL.cache.fetch(@source) do
+      ETL.parser.(@connection.get.body)
     end
   end
 
   def cooked
-    @cache.fetch(@path) do
-      @transform.call(raw)
+    ETL.cache.fetch(@path) do
+      ETL.generator.(@transform.(raw))
     end
   end
 end

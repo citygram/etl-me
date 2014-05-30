@@ -17,7 +17,7 @@ ETL.register('/chi-new-biz-licenses', 'http://data.cityofchicago.org/resource/r5
     }
   end
 
-  { 'type' => 'FeatureCollection', 'features' => features }
+  {'type' => 'FeatureCollection', 'features' => features}
 end
 
 ETL.register('/sf-311-cases', 'http://data.sfgov.org/resource/vw6y-z8j6?$limit=100&$order=opened+DESC&$where=opened+IS+NOT+NULL') do |collection|
@@ -37,5 +37,5 @@ ETL.register('/sf-311-cases', 'http://data.sfgov.org/resource/vw6y-z8j6?$limit=1
     }
   end
 
-  { 'type' => 'FeatureCollection', 'features' => features }
+  {'type' => 'FeatureCollection', 'features' => features}
 end
