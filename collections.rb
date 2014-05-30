@@ -1,6 +1,6 @@
 require './etl'
 
-ETL.register('/chi-new-biz-licenses', 'http://data.cityofchicago.org/resource/r5kz-chrr?$limit=100&$order=date_issued+DESC&$where=longitude+IS+NOT+NULL') do |collection|
+ETL.register('/chi-new-biz-licenses', 'https://data.cityofchicago.org/resource/r5kz-chrr?$limit=100&$order=date_issued+DESC&$where=longitude+IS+NOT+NULL') do |collection|
   features = collection.map do |item|
     title = "[#{item['license_description']}] #{item['legal_name']}"
     {
@@ -20,7 +20,7 @@ ETL.register('/chi-new-biz-licenses', 'http://data.cityofchicago.org/resource/r5
   {'type' => 'FeatureCollection', 'features' => features}
 end
 
-ETL.register('/sf-311-cases', 'http://data.sfgov.org/resource/vw6y-z8j6?$limit=100&$order=opened+DESC&$where=opened+IS+NOT+NULL') do |collection|
+ETL.register('/sf-311-cases', 'https://data.sfgov.org/resource/vw6y-z8j6?$limit=100&$order=opened+DESC&$where=opened+IS+NOT+NULL') do |collection|
   features = collection.map do |item|
     title = "[#{item['request_type']}] #{item['request_details']}"
     {
