@@ -1,5 +1,30 @@
 require './etl'
 
+source = 'http://data.cityofnewyork.us/resource/jrsc-cabt'+
+         '?$limit=100&$order=created_date+DESC&'+
+         '$where=longitude+IS+NOT+NULL+AND+'+
+                'incident_address+IS+NOT+NULL+AND+'+
+                'descriptor+IS+NOT+NULL'
+ETL.register('/nyc-311-restaurant-data', source) do |collection|
+  features = collection.map do |item|
+    title = "[#{item['incident_address']}] #{item['descriptor']}"
+    {
+      'id' => item['unique_key'],
+      'type' => 'Feature',
+      'geometry' => {
+        'type' => 'Point',
+        'coordinates' => [
+          item['location']['longitude'].to_f,
+          item['location']['latitude'].to_f
+        ]
+      },
+      'properties' => item.merge('title' => title)
+    }
+  end
+
+  {'type' => 'FeatureCollection', 'features' => features}
+end
+
 ETL.register('/chi-new-biz-licenses', 'https://data.cityofchicago.org/resource/r5kz-chrr?$limit=100&$order=date_issued+DESC&$where=longitude+IS+NOT+NULL') do |collection|
   features = collection.map do |item|
     title = "[#{item['license_description']}] #{item['legal_name']}"
