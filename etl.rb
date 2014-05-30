@@ -1,6 +1,5 @@
 require 'active_support/cache'
 require 'faraday'
-require 'faraday_middleware'
 
 class ETL
   @cache = ActiveSupport::Cache::MemoryStore.new(expires_in: Integer(ENV['CACHE_TTL'] || 300))
