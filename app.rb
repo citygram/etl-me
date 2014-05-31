@@ -5,6 +5,10 @@ require 'json'
 require 'sinatra'
 require './collections'
 
+configure :production do
+  require 'newrelic_rpm'
+end
+
 ETL.collections.each do |collection|
   get(collection.path) do
     content_type :json
