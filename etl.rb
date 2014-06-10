@@ -2,13 +2,10 @@ require 'active_support/cache'
 require 'faraday'
 
 class ETL
-  @cache = ActiveSupport::Cache::MemoryStore.new(expires_in: Integer(ENV['CACHE_TTL'] || 300))
-  @parser = ->(data) { JSON.parse(data) }
-  @generator = ->(data){ JSON.pretty_generate(data) }
-  @collections = []
+  class RequestFailed < StandardError; end
 
   class << self
-    attr_reader :cache, :generator, :parser, :collections
+    attr_accessor :cache, :generator, :parser, :collections
   end
 
   def self.register(path, *args, &block)
@@ -29,9 +26,20 @@ class ETL
     end
   end
 
+  def get
+    response = @connection.get
+
+    unless response.status == 200
+      ETL.cache.clear
+      raise RequestFailed, "HTTP failure: status #{response.status}"
+    end
+
+    response.body
+  end
+
   def raw
     ETL.cache.fetch(@source) do
-      ETL.parser.(@connection.get.body)
+      ETL.parser.(get)
     end
   end
 
@@ -40,4 +48,9 @@ class ETL
       ETL.generator.(@transform.(raw))
     end
   end
+
+  self.cache = ActiveSupport::Cache::MemoryStore.new(expires_in: Integer(ENV['CACHE_TTL'] || 300))
+  self.parser = ->(data) { JSON.parse(data) }
+  self.generator = ->(data){ JSON.pretty_generate(data) }
+  self.collections = []
 end
