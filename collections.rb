@@ -1,5 +1,31 @@
 require './etl'
 
+source = 'https://data.seattle.gov/resource/kzjm-xkqj'+
+         '?$limit=100&$order=datetime+DESC&'+
+         '$where=longitude+IS+NOT+NULL+AND+'+
+                'latitude+IS+NOT+NULL+AND+'+
+                'incident_number+IS+NOT+NULL+AND+'+
+                'datetime+IS+NOT+NULL'
+ETL.register('/seattle-911-fire-calls', source) do |collection|
+  features = collection.map do |item|
+    title = "[911 Fire Call] #{item['type']} @ #{item['address']}"
+    {
+      'id' => item['incident_number'],
+      'type' => 'Feature',
+      'geometry' => {
+        'type' => 'Point',
+        'coordinates' => [
+          item['longitude'].to_f,
+          item['latitude'].to_f
+        ]
+      },
+      'properties' => item.merge('title' => title, 'datetime' => Time.at(item['datetime']).iso8601)
+    }
+  end
+
+  {'type' => 'FeatureCollection', 'features' => features}
+end
+
 source = 'http://data.cityofnewyork.us/resource/jrsc-cabt'+
          '?$limit=100&$order=created_date+DESC&'+
          '$where=longitude+IS+NOT+NULL+AND+'+
