@@ -1,5 +1,31 @@
 require './etl'
 
+source = 'https://data.seattle.gov/resource/mags-97de?'+
+           '$limit=100&'+
+           '$order=application_date+DESC&'+
+           '$where=longitude+IS+NOT+NULL+AND+'+
+             'latitude+IS+NOT+NULL+AND+'+
+             'application_permit_number+IS+NOT+NULL'
+ETL.register('/seattle-building-permits', source) do |collection|
+  features = collection.map do |item|
+    title = "[#{item['permit_type']} - #{item['category']}] #{item['status']} @ #{item['address']}"
+    {
+      'id' => item['application_permit_number'],
+      'type' => 'Feature',
+      'geometry' => {
+        'type' => 'Point',
+        'coordinates' => [
+          item['longitude'].to_f,
+          item['latitude'].to_f
+        ]
+      },
+      'properties' => item.merge('title' => title)
+    }
+  end
+
+  {'type' => 'FeatureCollection', 'features' => features}
+end
+
 source = 'https://data.seattle.gov/resource/kzjm-xkqj'+
          '?$limit=100&$order=datetime+DESC&'+
          '$where=longitude+IS+NOT+NULL+AND+'+
