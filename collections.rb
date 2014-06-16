@@ -1,5 +1,30 @@
 require './etl'
 
+source = 'https://data.seattle.gov/resource/dk8m-pdjf?'+
+           '$limit=100&'+
+           '$order=date_case_created+DESC&'+
+           '$where=longitude+IS+NOT+NULL+AND+'+
+             'latitude+IS+NOT+NULL'
+ETL.register('/seattle-code-violation-cases', source) do |collection|
+  features = collection.map do |item|
+    title = "[#{item['case_type']} - #{item['case_group']}] #{item['status']} @ #{item['address']}"
+    {
+      'id' => item['case_number'],
+      'type' => 'Feature',
+      'geometry' => {
+        'type' => 'Point',
+        'coordinates' => [
+          item['longitude'].to_f,
+          item['latitude'].to_f
+        ]
+      },
+      'properties' => item.merge('title' => title)
+    }
+  end
+
+  {'type' => 'FeatureCollection', 'features' => features}
+end
+
 source = 'https://data.seattle.gov/resource/mags-97de?'+
            '$limit=100&'+
            '$order=application_date+DESC&'+
